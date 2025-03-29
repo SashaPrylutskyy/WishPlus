@@ -16,13 +16,12 @@ import java.util.Objects;
 @Service
 public class ImportantDateService {
 
-    @Autowired
-    private UserService userService;
-
+    private final UserService userService;
     private final ImportantDateRepository repo;
 
-    public ImportantDateService(ImportantDateRepository repo) {
+    public ImportantDateService(ImportantDateRepository repo, UserService userService) {
         this.repo = repo;
+        this.userService = userService;
     }
 
     public List<ImportantDate> getRecordsByUserId(Long id) {
