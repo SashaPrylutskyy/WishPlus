@@ -4,6 +4,8 @@ import com.sashaprylutsky.wishplus.model.User;
 import com.sashaprylutsky.wishplus.model.UserPrincipal;
 import com.sashaprylutsky.wishplus.repository.UserRepository;
 import jakarta.persistence.NoResultException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.AccessDeniedException;
@@ -21,6 +23,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     public UserService(BCryptPasswordEncoder encoder, UserRepository userRepository) {
         this.encoder = encoder;
@@ -29,7 +32,13 @@ public class UserService {
 
     public static UserPrincipal getUserPrincipal() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
+
+        if (    authentication == null || !authentication.isAuthenticated() ||
+                !(authentication.getPrincipal() instanceof UserPrincipal)) {
+            String principalType = (authentication != null && authentication.getPrincipal() != null)
+                    ? authentication.getPrincipal().getClass().getName() : "null";
+            log.debug("Authentication check failed or principal type mismatch. Is Authenticated: {}, Principal Type: {}",
+                    (authentication != null && authentication.isAuthenticated()), principalType);
             throw new NullPointerException("User is not authenticated.");
         }
 

@@ -21,12 +21,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/principal")
-    public ResponseEntity<UserPrincipal> getUserPrincipal() {
-        UserPrincipal userPrincipal = UserService.getUserPrincipal();
-        return ResponseEntity.ok(userPrincipal);
-    }
-
     @PostMapping
     public ResponseEntity<User> register(@RequestBody @Validated User user) {
         User createdUser = userService.registerUser(user);
