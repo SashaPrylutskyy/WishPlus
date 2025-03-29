@@ -1,6 +1,7 @@
 package com.sashaprylutsky.wishplus.controller;
 
 import com.sashaprylutsky.wishplus.model.User;
+import com.sashaprylutsky.wishplus.model.UserPrincipal;
 import com.sashaprylutsky.wishplus.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,12 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @GetMapping("/principal")
+    public ResponseEntity<UserPrincipal> getUserPrincipal() {
+        UserPrincipal userPrincipal = UserService.getUserPrincipal();
+        return ResponseEntity.ok(userPrincipal);
     }
 
     @PostMapping

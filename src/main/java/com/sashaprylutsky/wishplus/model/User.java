@@ -18,25 +18,32 @@ public class User {
 
     @Email
     @Column(name = "email", unique = true)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String email;
 
-//    @NotBlank(message = "Username is required")
+    //    @NotBlank(message = "Username is required")
+    @Column(name = "username", unique = true)
     @Size(min = 8, max = 20, message = "Username must be 8-20 characters")
     private String username;
 
-//    @NotBlank(message = "Password is required")
+    //    @NotBlank(message = "Password is required")
     @Column(name = "password", nullable = false)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-//    @NotBlank(message = "First name is required")
+    //    @NotBlank(message = "First name is required")
     private String firstName;
 
-//    @NotBlank(message = "Second name is required")
+    //    @NotBlank(message = "Second name is required")
     private String lastName;
     private String profilePhoto;
 
-    public User() {}
+    public User() {
+    }
+
+    public User(Long id) {
+        this.id = id;
+    }
 
     public User(String email, String username, String password, String firstName, String lastName) {
         this.email = email;

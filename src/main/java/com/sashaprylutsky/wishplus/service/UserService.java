@@ -27,7 +27,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    private UserPrincipal getUserPrincipal() {
+    public static UserPrincipal getUserPrincipal() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new NullPointerException("User is not authenticated.");
@@ -56,8 +56,7 @@ public class UserService {
 
     public User updateUserPrincipalDetails(Long id, User user) {
         UserPrincipal userPrincipal = getUserPrincipal();
-        User userRecord = userRepository.findById(id)
-                .orElseThrow(() -> new NoResultException("No user found with ID " + id));
+        User userRecord = getUserById(id);
 
         if (!Objects.equals(userPrincipal.getId(), userRecord.getId())) {
             throw new AccessDeniedException("Change access is prohibited.");
@@ -89,7 +88,7 @@ public class UserService {
         User userRecord = userRepository.findById(id).orElseThrow(() ->
                 new NoResultException("No user found with ID " + id));
 
-        String submitPhrase = "Delete your account forever!";
+        final String submitPhrase = "Delete my account forever!";
 
         if (!Objects.equals(userPrincipal.getId(), userRecord.getId())) {
             throw new AccessDeniedException("Access to delete is denied.");
