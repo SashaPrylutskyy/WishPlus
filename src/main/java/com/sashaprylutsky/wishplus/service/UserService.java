@@ -3,12 +3,15 @@ package com.sashaprylutsky.wishplus.service;
 import com.sashaprylutsky.wishplus.model.User;
 import com.sashaprylutsky.wishplus.model.UserPrincipal;
 import com.sashaprylutsky.wishplus.repository.UserRepository;
+import com.sashaprylutsky.wishplus.security.JwtTokenProvider;
 import jakarta.persistence.NoResultException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,13 +24,20 @@ import java.util.concurrent.CancellationException;
 @Service
 public class UserService {
 
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    public UserService(BCryptPasswordEncoder encoder, UserRepository userRepository) {
+    public UserService(BCryptPasswordEncoder encoder,
+                       UserRepository userRepository,
+                       AuthenticationManager authenticationManager,
+                       JwtTokenProvider tokenProvider) {
         this.encoder = encoder;
         this.userRepository = userRepository;
+        this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
     }
 
     public static UserPrincipal getUserPrincipal() {
@@ -107,5 +117,24 @@ public class UserService {
         }
 
         userRepository.delete(userRecord);
+    }
+
+    public String authenticateUser(User user) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        user.getUsername(),
+                        user.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        return tokenProvider.generateToken(userPrincipal.getUsername());
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new NoResultException("No user found with username: " + username));
     }
 }

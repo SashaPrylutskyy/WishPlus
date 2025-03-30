@@ -5,6 +5,8 @@ import com.sashaprylutsky.wishplus.model.UserPrincipal;
 import com.sashaprylutsky.wishplus.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,12 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> authenticateUser(@RequestBody @Validated User user) {
+        String jwt = userService.authenticateUser(user);
+        return ResponseEntity.ok(jwt);
     }
 
     @PostMapping
@@ -53,5 +61,15 @@ public class UserController {
         return ResponseEntity.ok("User with id: " + id + " is successfully deleted.");
     }
 
+    @GetMapping("/me") // Або /api/auth/me
+    public ResponseEntity<User> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String username = userDetails.getUsername();
+        User currentUser = userService.getUserByUsername(username);
+        return ResponseEntity.ok(currentUser);
+    }
 
 }
