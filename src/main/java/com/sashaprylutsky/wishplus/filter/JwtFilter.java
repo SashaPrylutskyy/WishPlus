@@ -1,5 +1,6 @@
 package com.sashaprylutsky.wishplus.filter;
 
+import com.sashaprylutsky.wishplus.model.UserPrincipal;
 import com.sashaprylutsky.wishplus.service.UserService;
 import com.sashaprylutsky.wishplus.util.JwtUtil;
 import jakarta.servlet.FilterChain;

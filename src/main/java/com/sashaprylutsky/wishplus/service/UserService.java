@@ -104,8 +104,7 @@ public class UserService implements UserDetailsService {
 
     public void deleteUserById(Long id, String submitMessage) {
         UserPrincipal userPrincipal = getUserPrincipal();
-        User userRecord = userRepository.findById(id).orElseThrow(() ->
-                new NoResultException("No user found with ID " + id));
+        User userRecord = getUserById(id);
 
         final String submitPhrase = "Delete my account forever!";
 

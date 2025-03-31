@@ -61,10 +61,9 @@ public class ImportantDateService {
     public void deleteRecordById(Long id) {
         ImportantDate record = getRecordById(id);
         UserPrincipal userPrincipal = UserService.getUserPrincipal();
-        User user = userService.getUserById(record.getUser().getId());
 
-        if (!Objects.equals(userPrincipal.getId(), user.getId())) {
-            throw new AccessDeniedException("Change access is prohibited.");
+        if (!Objects.equals(userPrincipal.getId(), record.getUser().getId())) {
+            throw new AccessDeniedException("Delete access is prohibited.");
         }
 
         repo.delete(record);
