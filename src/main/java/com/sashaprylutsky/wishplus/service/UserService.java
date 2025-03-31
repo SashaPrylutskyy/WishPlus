@@ -3,7 +3,7 @@ package com.sashaprylutsky.wishplus.service;
 import com.sashaprylutsky.wishplus.model.User;
 import com.sashaprylutsky.wishplus.model.UserPrincipal;
 import com.sashaprylutsky.wishplus.repository.UserRepository;
-import com.sashaprylutsky.wishplus.security.JwtTokenProvider;
+import com.sashaprylutsky.wishplus.util.JwtUtil;
 import jakarta.persistence.NoResultException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +14,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,28 +25,25 @@ import java.util.Objects;
 import java.util.concurrent.CancellationException;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider tokenProvider;
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     public UserService(BCryptPasswordEncoder encoder,
                        UserRepository userRepository,
-                       AuthenticationManager authenticationManager,
-                       JwtTokenProvider tokenProvider) {
+                       JwtUtil jwtUtil) {
         this.encoder = encoder;
         this.userRepository = userRepository;
-        this.authenticationManager = authenticationManager;
-        this.tokenProvider = tokenProvider;
+        this.jwtUtil = jwtUtil;
     }
 
     public static UserPrincipal getUserPrincipal() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (    authentication == null || !authentication.isAuthenticated() ||
+        if (authentication == null || !authentication.isAuthenticated() ||
                 !(authentication.getPrincipal() instanceof UserPrincipal)) {
             String principalType = (authentication != null && authentication.getPrincipal() != null)
                     ? authentication.getPrincipal().getClass().getName() : "null";
@@ -119,22 +119,24 @@ public class UserService {
         userRepository.delete(userRecord);
     }
 
-    public String authenticateUser(User user) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        user.getUsername(),
-                        user.getPassword()
-                )
-        );
+    public String login(User user) {
+        User userRecord = getUserByUsername(user.getUsername());
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        return tokenProvider.generateToken(userPrincipal.getUsername());
+        if (encoder.matches(user.getPassword(), userRecord.getPassword())) {
+            return jwtUtil.generateToken(userRecord);
+        }
+        throw new RuntimeException("Invalid credentials");
     }
 
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new NoResultException("No user found with username: " + username));
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = getUserByUsername(username);
+
+        return new UserPrincipal(user.getId(), user.getEmail(), user.getUsername(), user.getPassword());
     }
 }

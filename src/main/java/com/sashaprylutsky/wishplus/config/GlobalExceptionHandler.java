@@ -54,4 +54,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleCancellationException(CancellationException e) {
         return ResponseEntity.ok(Map.of("Exception", e.getMessage()));
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+    }
 }

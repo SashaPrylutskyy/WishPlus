@@ -24,12 +24,12 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> authenticateUser(@RequestBody @Validated User user) {
-        String jwt = userService.authenticateUser(user);
+    public ResponseEntity<String> login(@RequestBody @Validated User user) {
+        String jwt = userService.login(user);
         return ResponseEntity.ok(jwt);
     }
 
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody @Validated User user) {
         User createdUser = userService.registerUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
@@ -61,7 +61,7 @@ public class UserController {
         return ResponseEntity.ok("User with id: " + id + " is successfully deleted.");
     }
 
-    @GetMapping("/me") // Або /api/auth/me
+    @GetMapping("/me")
     public ResponseEntity<User> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
