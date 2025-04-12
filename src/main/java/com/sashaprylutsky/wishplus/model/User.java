@@ -6,11 +6,16 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
 @DynamicUpdate
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,21 +50,18 @@ public class User {
         this.id = id;
     }
 
-    public User(String email, String username, String password, String firstName, String lastName) {
-        this.email = email;
+    public User(Long id, String username) {
+        this.id = id;
         this.username = username;
-        this.password = password;
-        this.firstName = firstName;
-        this.lastName = lastName;
     }
 
-    public User(String email, String username, String password, String firstName, String lastName, String profilePhoto) {
+    public User(String email, String username, String password,
+                String firstName, String lastName) {
         this.email = email;
         this.username = username;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.profilePhoto = profilePhoto;
     }
 
     public String getEmail() {
@@ -94,10 +96,6 @@ public class User {
         this.lastName = lastName;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = password;
     }
@@ -110,24 +108,43 @@ public class User {
         this.profilePhoto = profilePhoto;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
     public void setUsername(String username) {
         this.username = username;
     }
 
     @Override
-    public String toString() {
-        return "User{" +
-                "email='" + email + '\'' +
-                ", id=" + id +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", profilePhoto='" + profilePhoto + '\'' +
-                '}';
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
     }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return UserDetails.super.isEnabled();
+    }
+
 }

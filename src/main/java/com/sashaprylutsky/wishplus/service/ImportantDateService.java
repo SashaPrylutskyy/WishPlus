@@ -2,16 +2,12 @@ package com.sashaprylutsky.wishplus.service;
 
 import com.sashaprylutsky.wishplus.model.ImportantDate;
 import com.sashaprylutsky.wishplus.model.User;
-import com.sashaprylutsky.wishplus.model.UserPrincipal;
 import com.sashaprylutsky.wishplus.repository.ImportantDateRepository;
 import jakarta.persistence.NoResultException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 @Service
 public class ImportantDateService {
@@ -29,43 +25,39 @@ public class ImportantDateService {
     }
 
     public ImportantDate createRecord(ImportantDate importantDate) {
-        UserPrincipal user = UserService.getUserPrincipal();
-        importantDate.setUser(new User(user.getId()));
+        User principal = userService.getPrincipal();
+        importantDate.setUser(new User(principal.getId()));
 
         return repo.save(importantDate);
     }
 
-    public ImportantDate getRecordById(Long id) {
-        return repo.findById(id)
-                .orElseThrow(() -> new NoResultException("No record is being found with id: " + id));
+    public ImportantDate getRecordById(Long record_id) {
+        return repo.findById(record_id)
+                .orElseThrow(() -> new NoResultException("No record is being found with id: " + record_id));
     }
 
-    public ImportantDate updateRecordById(Long id, ImportantDate importantDate) {
-        ImportantDate record = getRecordById(id);
-        UserPrincipal userPrincipal = UserService.getUserPrincipal();
-        User userRecord = userService.getUserById(record.getUser().getId());
+    public ImportantDate getRecordByRecordIdAndUserId(Long record_id, Long user_id) {
+        return repo.selectRecordByRecordIdAndUserId(record_id, user_id)
+                .orElseThrow(() -> new RuntimeException("User doesn't have a record Num." + record_id));
+    }
 
-        if (!Objects.equals(userPrincipal.getId(), userRecord.getId())) {
-            throw new AccessDeniedException("Change access is prohibited.");
-        }
+    public ImportantDate updateRecordById(Long record_id, ImportantDate importantDate) {
+        User principal = userService.getPrincipal();
+        ImportantDate dateRecord = getRecordByRecordIdAndUserId(record_id, principal.getId());
+
         if (importantDate.getTitle() != null && !importantDate.getTitle().isBlank()) {
-            record.setTitle(importantDate.getTitle());
+            dateRecord.setTitle(importantDate.getTitle());
         }
         if (importantDate.getDate() != null) {
-            record.setDate(importantDate.getDate());
+            dateRecord.setDate(importantDate.getDate());
         }
-
-        return repo.save(record);
+        return repo.save(dateRecord);
     }
 
-    public void deleteRecordById(Long id) {
-        ImportantDate record = getRecordById(id);
-        UserPrincipal userPrincipal = UserService.getUserPrincipal();
-
-        if (!Objects.equals(userPrincipal.getId(), record.getUser().getId())) {
-            throw new AccessDeniedException("Delete access is prohibited.");
-        }
-
-        repo.delete(record);
+    @Transactional
+    public void deleteRecordById(Long record_id) {
+        User principal = userService.getPrincipal();
+        ImportantDate dateRecord = getRecordByRecordIdAndUserId(record_id, principal.getId());
+        repo.delete(dateRecord);
     }
 }

@@ -45,7 +45,7 @@ public class ImportantDateController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteRecordById(@PathVariable Long id) {
         service.deleteRecordById(id);
-        return ResponseEntity.ok("Record deleted with id: " + id);
+        return ResponseEntity.ok("Record Num.%d is successfully deleted.".formatted(id));
     }
 
 }

@@ -1,57 +1,48 @@
 package com.sashaprylutsky.wishplus.config;
 
-import com.sashaprylutsky.wishplus.filter.JwtFilter;
+import com.sashaprylutsky.wishplus.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.security.web.authentication.AuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthenticationProvider authenticationProvider;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
+
+    public SecurityConfig(AuthenticationProvider authenticationProvider,
+                          JwtAuthenticationFilter jwtAuthenticationFilter,
+                          AuthenticationEntryPoint authenticationEntryPoint) {
+        this.authenticationProvider = authenticationProvider;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+    }
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Додаємо CORS у HttpSecurity
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers(   "api/users/login",
+                                            "api/users/register",
+                                            "about").permitAll()
+                        .anyRequest().authenticated())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
-
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public JwtFilter jwtFilter() {
-        return new JwtFilter();
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true); // Дозволяємо credentials (наприклад, cookies чи Authorization header)
-        config.addAllowedOrigin("http://localhost:3000"); // Точно вказуємо фронтенд
-        config.addAllowedHeader("*"); // Дозволяємо всі заголовки
-        config.addAllowedMethod("*"); // Дозволяємо всі методи (GET, POST тощо)
-        source.registerCorsConfiguration("/**", config); // Застосовуємо до всіх шляхів
-        return source;
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authenticationEntryPoint))
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthenticationFilter, AuthenticationFilter.class)
+                .build();
     }
 }

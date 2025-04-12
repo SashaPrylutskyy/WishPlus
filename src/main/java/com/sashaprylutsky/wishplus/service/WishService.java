@@ -1,7 +1,6 @@
 package com.sashaprylutsky.wishplus.service;
 
 import com.sashaprylutsky.wishplus.model.User;
-import com.sashaprylutsky.wishplus.model.UserPrincipal;
 import com.sashaprylutsky.wishplus.model.Wish;
 import com.sashaprylutsky.wishplus.repository.WishRepository;
 import jakarta.persistence.NoResultException;
@@ -15,46 +14,37 @@ import java.util.Objects;
 @Service
 public class WishService {
 
-    private WishRepository repo;
+    private final WishRepository wishRepo;
+    private final UserService userService;
 
-    public WishService(WishRepository repo) {
-        this.repo = repo;
-    }
-
-    public List<Wish> getAllWishesByUserId(Long id) {
-        return repo.findAllByUser_Id(id);
-    }
-
-    public Wish getWishById(Long id) {
-        return repo.findById(id)
-                .orElseThrow(() -> new NoResultException("No wish found with ID " + id));
+    public WishService(WishRepository wishRepo, UserService userService) {
+        this.wishRepo = wishRepo;
+        this.userService = userService;
     }
 
     public Wish createWish(Wish wish) {
-        UserPrincipal userPrincipal = UserService.getUserPrincipal();
-        wish.setUser(new User(userPrincipal.getId()));
+        User principal = userService.getPrincipal();
+        wish.setUser(new User(principal.getId()));
 
-        return repo.save(wish);
+        return wishRepo.save(wish);
     }
 
-    public void deleteWishById(Long id) {
-        UserPrincipal userPrincipal = UserService.getUserPrincipal();
-        Wish wish = getWishById(id);
-
-        if (!Objects.equals(userPrincipal.getId(), wish.getUser().getId())) {
-            throw new AccessDeniedException("Access to delete is denied.");
-        }
-
-        repo.delete(wish);
+    public List<Wish> getAllWishesByUserId(Long user_id) {
+        return wishRepo.findAllByUser_Id(user_id);
     }
 
-    public Wish updateWish(Long id, Wish wish) {
-        UserPrincipal userPrincipal = UserService.getUserPrincipal();
-        Wish wishRecord = getWishById(id);
+    public Wish getWishById(Long id) {
+        return wishRepo.findById(id)
+                .orElseThrow(() -> new NoResultException("No wish found with ID " + id));
+    }
+
+    public Wish updateWish(Long wish_id, Wish wish) {
+        User principal = userService.getPrincipal();
+        Wish wishRecord = getWishById(wish_id);
 
         boolean isUpdated = false;
 
-        if (!Objects.equals(userPrincipal.getId(), wishRecord.getUser().getId())) {
+        if (!Objects.equals(principal.getId(), wishRecord.getUser().getId())) {
             throw new AccessDeniedException("Change access is prohibited.");
         }
         if (wish.getTitle() != null && !wish.getTitle().isBlank()) {
@@ -77,6 +67,17 @@ public class WishService {
             wishRecord.setUpdatedAt(Instant.now());
         }
 
-        return repo.save(wishRecord);
+        return wishRepo.save(wishRecord);
+    }
+
+    public void deleteWishById(Long wish_id) {
+        User principal = userService.getPrincipal();
+        Wish wishRecord = getWishById(wish_id);
+
+        if (!Objects.equals(principal.getId(), wishRecord.getUser().getId())) {
+            throw new AccessDeniedException("Access to delete is denied.");
+        }
+
+        wishRepo.delete(wishRecord);
     }
 }

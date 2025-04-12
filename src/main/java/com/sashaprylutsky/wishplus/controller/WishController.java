@@ -12,7 +12,7 @@ import java.util.List;
 @RequestMapping("/api/wishlist")
 public class WishController {
 
-    private WishService service;
+    private final WishService service;
 
     public WishController(WishService service) {
         this.service = service;
@@ -24,9 +24,9 @@ public class WishController {
         return ResponseEntity.ok(wish);
     }
 
-    @GetMapping("/user/{id}")
-    public ResponseEntity<List<Wish>> getAllWishesByUserId(@PathVariable Long id) {
-        List<Wish> wishes = service.getAllWishesByUserId(id);
+    @GetMapping("/user/{user_id}")
+    public ResponseEntity<List<Wish>> getAllWishesByUserId(@PathVariable Long user_id) {
+        List<Wish> wishes = service.getAllWishesByUserId(user_id);
         return ResponseEntity.ok(wishes);
     }
 
@@ -35,16 +35,16 @@ public class WishController {
         return ResponseEntity.ok(service.createWish(wish));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Wish> updateWish(@PathVariable Long id,
+    @PutMapping("/{wish_id}")
+    public ResponseEntity<Wish> updateWish(@PathVariable Long wish_id,
                                            @RequestBody @Validated Wish wish){
-        Wish updatedWish = service.updateWish(id, wish);
+        Wish updatedWish = service.updateWish(wish_id, wish);
         return ResponseEntity.ok(updatedWish);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteWishById(@PathVariable Long id) {
-        service.deleteWishById(id);
-        return ResponseEntity.ok("Wish of id: " + id + " is deleted");
+    @DeleteMapping("/{wish_id}")
+    public ResponseEntity<String> deleteWishById(@PathVariable Long wish_id) {
+        service.deleteWishById(wish_id);
+        return ResponseEntity.ok("Wish Num.%d is deleted".formatted(wish_id));
     }
 }

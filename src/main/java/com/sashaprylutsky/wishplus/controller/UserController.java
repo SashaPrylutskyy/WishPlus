@@ -1,12 +1,9 @@
 package com.sashaprylutsky.wishplus.controller;
 
 import com.sashaprylutsky.wishplus.model.User;
-import com.sashaprylutsky.wishplus.model.UserPrincipal;
 import com.sashaprylutsky.wishplus.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,28 +44,22 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(userDTO);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUserPrincipalDetails(
-            @PathVariable Long id, @Validated @RequestBody User user) {
-        return ResponseEntity.ok(userService.updateUserPrincipalDetails(id, user));
+    @PutMapping
+    public ResponseEntity<User> updateUser(@Validated @RequestBody User user) {
+        return ResponseEntity.ok(userService.updateUser(user));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUserById(@PathVariable Long id,
-                                                 @RequestBody Map<String, String> requestBody) {
+    @DeleteMapping
+    public ResponseEntity<String> deleteCurrentUser(@RequestBody Map<String, String> requestBody) {
         String submitMessage = requestBody.get("submitMessage");
-        userService.deleteUserById(id, submitMessage);
-        return ResponseEntity.ok("User with id: " + id + " is successfully deleted.");
+        userService.deleteUser(submitMessage);
+        return ResponseEntity.ok("User is successfully deleted.");
     }
 
     @GetMapping("/me")
-    public ResponseEntity<User> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        String username = userDetails.getUsername();
-        User currentUser = userService.getUserByUsername(username);
+    public ResponseEntity<User> getPrincipal() {
+        User principal = userService.getPrincipal();
+        User currentUser = userService.getUserById(principal.getId());
         return ResponseEntity.ok(currentUser);
     }
 
