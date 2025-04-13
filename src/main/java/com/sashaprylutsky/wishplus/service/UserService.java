@@ -1,5 +1,6 @@
 package com.sashaprylutsky.wishplus.service;
 
+import com.sashaprylutsky.wishplus.model.Followers;
 import com.sashaprylutsky.wishplus.model.User;
 import com.sashaprylutsky.wishplus.repository.UserRepository;
 import com.sashaprylutsky.wishplus.security.JwtService;
@@ -111,5 +112,9 @@ public class UserService {
     public User getUserByUsername(String username) {
         return userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new NoResultException("No user found with username: " + username));
+    }
+
+    public List<User> getUsersByPrefix(String user_prefix) {
+        return userRepository.findUsersByUsernameStartsWith(user_prefix);
     }
 }

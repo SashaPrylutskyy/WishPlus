@@ -63,4 +63,10 @@ public class UserController {
         return ResponseEntity.ok(currentUser);
     }
 
+    @GetMapping("/search/{user_prefix}")
+    public ResponseEntity<List<User>> userSearch(@PathVariable String user_prefix) {
+        List<User> users = userService.getUsersByPrefix(user_prefix);
+        return ResponseEntity.ok(users);
+    }
+
 }
