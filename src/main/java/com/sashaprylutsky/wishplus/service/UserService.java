@@ -1,6 +1,5 @@
 package com.sashaprylutsky.wishplus.service;
 
-import com.sashaprylutsky.wishplus.model.Followers;
 import com.sashaprylutsky.wishplus.model.User;
 import com.sashaprylutsky.wishplus.repository.UserRepository;
 import com.sashaprylutsky.wishplus.security.JwtService;
